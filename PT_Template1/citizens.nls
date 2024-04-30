@@ -8,7 +8,7 @@
 ;---------------------------------------------------
 
 globals [
- numPrisoners ; Number of prisoners
+
 ]
 ;---- Specific, local variables of citizen-agents
 citizens-own [
@@ -91,6 +91,19 @@ to setup-citizens
     set walkdesire? false
     set counter 0 ; all-purpose counter
     set numPrisoners 0
+    set vWalk minWalk
+    set minWalk (random 10) / 10
+    set thrWalk ((random 6) + 3) / 10
+    set dWalk (random 5) / 100
+    set vMeet minMeet
+    set minMeet (random 3) / 10
+    set thrMeet ((random 6) + 3) / 10
+    set vRest minMeet
+    set minRest (random 3) / 10
+    set thrRest ((random 6) + 3) / 10
+    set vCinema minMeet
+    set minCinema (random 3) / 10
+    set thrCinema ((random 6) + 3) / 10
   ]
 
 end
@@ -119,6 +132,10 @@ set localxy patch-here
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
  
+ set vWalk (random 10) / 10
+ set vMeet (random 10) / 10
+ set vRest (random 10) / 10
+ set vCinema (random 10) / 10
   
   (ifelse
     ;add all the reactive behavior in order of their priorities- highest at the top of the list
@@ -211,25 +228,40 @@ to proactiveBehavior
   ;
   ;
   
-  
   ; For testing purposes
   let StateList ["Study" "Work" "Unemployed" "WalkingAround" "MeetingFriends" "Go_out" "Political" "Demonstration"]
   
-  set vWalk vWalk + random-float 1.0
-  set vMeet vMeet + random-float 1.0
-  set vRest vRest + random-float 1.0
   
-  ifelse vWalk >= max (list vMeet vRest) [
-    set proState "WalkingAround"
-  ] [
-    ifelse vMeet > vRest [
-      set proState "MeetingFriends"
-      set color orange
-    ] [
-      set proState "Go_out"
-      set color pink
-    ]
-  ]
+vWalk
+minWalk (random 10) / 10
+thrWalk ((random 6) + 3) / 10
+dWalk (random 5) / 100
+vMeet minMeet
+minMeet (random 3) / 10
+thrMeet ((random 6) + 3) / 10
+vRest minMeet
+minRest (random 3) / 10
+thrRest ((random 6) + 3) / 10
+vCinema minMeet
+minCinema (random 3) / 10
+thrCinema ((random 6) + 3) / 10
+  
+  
+  let maxValue max(list vWalk vMeet vRest)
+  (ifelse 
+    (maxValue = vWalk) [ set proState "WalkingAround" ]
+    (maxValue = vMeet) [ set proState "MeetingFriends"]
+    (maxValue = vRest) [ set proState "Go_out" ]
+    [ set proState "Error, no state chosen" ]
+  ) 
+
+  
+  
+  
+  
+  
+  
+  
   
   ;########## Deliberation of states, e.g. deciding on new states depending on new beliefs ##############
   ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
