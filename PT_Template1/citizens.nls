@@ -90,9 +90,11 @@ to setup-citizens
     set counter 0 ; all-purpose counter
     set numPrisoners 0
     
-    set thrSpeech 0.8
-    set vFrust 0.5
-
+    set vFrust 0.95 
+    set thrSpeech 0.1
+    set vWalk 0.95 
+    set vMeet 0.95 
+    set vRest 0.95 
   ]
 end
 
@@ -214,11 +216,19 @@ to proactiveBehavior
   ; For testing purposes
   let StateList (list "Study" "Work" "Unemployed" "WalkingAround" "MeetingFriends" "Go_out" "Political" "Demonstration")
   
+  let pursuitGoals (list vWalk vMeet vRest)
+  let close 0.1
+  let closeGoals length filter [goal -> goal > (0.9 - close)] pursuitGoals
 
-  ; If the frustration is higher than the thrSpeech and 2 out of 3 ’Pursue of happiness goals’ have vValues close to the max value (>0.9), Then proState=’Political’
-  if (vFrust > thrSpeech) and (vWalk > 0.9 * thrWalk or vMeet > 0.9 * thrMeet or vRest > 0.9 * thrRest) [
+  if (vFrust > thrSpeech) and (closeGoals >= 2) and
+    ((vWalk > 0.9 * thrWalk) or (vMeet > 0.9 * thrMeet) or (vRest > 0.9 * thrRest)) [
     set proState "Political"
   ]
+
+
+;  if (vFrust > thrSpeech) and (vWalk > 0.9 * thrWalk or vMeet > 0.9 * thrMeet or vRest > 0.9 * thrRest) [
+;    set proState "Political"
+;  ]
 
   
   ;########## Deliberation of states, e.g. deciding on new states depending on new beliefs ##############
@@ -226,11 +236,12 @@ to proactiveBehavior
   ; like for example walkdesire?, destinationxy, etc.
   ;
   ; For testing
-  set proState item (random 3) StateList
-  if Debug [print (word who "deliberated proState = " proState)]
+;  set proState item (random 3) StateList
+;  if Debug [print (word who "deliberated proState = " proState)]
   
   ; frust ska öka varje gång man är i deliberation stage
-  
+  set vFrust vFrust + 1
+
   
   ; "Finite State Machine" 
   (ifelse
@@ -277,7 +288,6 @@ to go_out
   set destinationxy one-of patches with [region = "Restaurant"]
 end
 
-
 to demonstrate
   if Debug [print (word who " is in the proactive state Demonstration")]
 end
@@ -285,29 +295,29 @@ end
 to political
   ; Go to the town square
   if Debug [print (word who " is in the proactive state Political")]
-  if localxy != locTownSquare [
-    set destinationxy locTownSquare
+
+  if not (region = "TownSquare") [
+    let targetPatches patches with [region = "TownSquare"]
+    set destinationxy one-of targetPatches
     moveToDestxy
-    stop
   ]
-  ; Hold a speech for 15 minutes (1 tick = 1 minute???????)
-  if localxy = locTownSquare [
-    ; Increment a counter to keep track of speech duration
+
+  if region = "TownSquare" [
+    set pcolor blue ; Move this line inside the if statement
+    ; Hold a speech for 15 minutes (1 tick = 1 minute)
     set counter (counter + 1)
-    set pcolor pink
-    if counter = 15 [ 
+
+    if counter = 15 [
       ; speech done
       set counter 0
+      set pcolor green
       ; Frust goes down after speech
       set vFrust (vFrust - 1)
-      stop
+      ; Go home after the speech
+      set destinationxy homeLoc
+      
     ]
   ]
-  ; Go home after the speech
-  if localxy != homeLoc [
-    moveToDestxy
-  ]
 end
-
 
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
