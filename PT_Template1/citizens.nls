@@ -221,7 +221,7 @@ to proactiveBehavior
   let closeGoals length filter [goal -> goal > (0.9 - close)] pursuitGoals
 
   if (vFrust > thrSpeech) and (closeGoals >= 2) and
-    ((vWalk > 0.9 * thrWalk) or (vMeet > 0.9 * thrMeet) or (vRest > 0.9 * thrRest)) [
+    ((vWalk >= thrWalk) or (vMeet >= thrMeet) or (vRest >= thrRest)) [
     set proState "Political"
   ]
 
@@ -302,11 +302,10 @@ to political
     moveToDestxy
   ]
 
-  if region = "TownSquare" [
-    set pcolor blue ; Move this line inside the if statement
-    ; Hold a speech for 15 minutes (1 tick = 1 minute)
+  if region = "TownSquare" [ 
+    ; Hold a speech for 15 minutes 
     set counter (counter + 1)
-
+    set pcolor blue ;
     if counter = 15 [
       ; speech done
       set counter 0
