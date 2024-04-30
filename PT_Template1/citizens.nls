@@ -91,16 +91,20 @@ to setup-citizens
     set walkdesire? false
     set counter 0 ; all-purpose counter
     set numPrisoners 0
+    ; variables for walk
     set vWalk minWalk
     set minWalk (random 10) / 10
     set thrWalk ((random 6) + 3) / 10
     set dWalk (random 5) / 100
+    ; variables for meeting friends
     set vMeet minMeet
     set minMeet (random 3) / 10
     set thrMeet ((random 6) + 3) / 10
+    ; variables for going out (restaurant)
     set vRest minMeet
     set minRest (random 3) / 10
     set thrRest ((random 6) + 3) / 10
+    ; variables for cinema
     set vCinema minMeet
     set minCinema (random 3) / 10
     set thrCinema ((random 6) + 3) / 10

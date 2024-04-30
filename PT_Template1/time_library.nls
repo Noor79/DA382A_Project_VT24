@@ -2,14 +2,7 @@ extensions [time]
 
 globals
 [
-  tick-datetime
-  sim-time               ; The current simulation time
-  sim-start-time
-  start-time
-  time-simulated   ; Text string showing how much time has been simulated, with the units specified on the Interface
-  sim-start-logotime
 
-  timeTaker-stop-time
  
 ]
 
