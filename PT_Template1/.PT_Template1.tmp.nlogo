@@ -267,6 +267,23 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
+BUTTON
+0
+0
+0
+0
+NIL
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 SLIDER
 23
 397
@@ -558,23 +575,6 @@ time-simulated
 0
 1
 11
-
-BUTTON
-489
-175
-582
-208
-NIL
-rsgsrgrgr
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 @#$#@#$#@
 ## WHAT IS IT?
