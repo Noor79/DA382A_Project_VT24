@@ -559,23 +559,6 @@ time-simulated
 1
 11
 
-BUTTON
-489
-175
-582
-208
-NIL
-rsgsrgrgr
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 @#$#@#$#@
 ## WHAT IS IT?
 
