@@ -61,8 +61,8 @@ citizens-own [
   minCinema ;---------Min-value for Going to Cinema after fulfillment of desire
   thrCinema ;---------Threshold for Going to Cinema -desire
   
-  ;different help-variables
-  counter; -----------general purpose counter
+
+  counter; -----------general counter
  
   
 ]
@@ -94,23 +94,24 @@ to setup-citizens
     ; variables for walk
     set vWalk minWalk
     set minWalk (random 10) / 10
-    set thrWalk ((random 6) + 3) / 10
+    set thrWalk ((random 8) + 5) / 10 ; Increased threshold
     set dWalk (random 5) / 100
     ; variables for meeting friends
     set vMeet minMeet
-    set minMeet (random 3) / 10
-    set thrMeet ((random 6) + 3) / 10
+    set minMeet (random 5) / 10 ; Adjusted minimum value
+    set thrMeet ((random 8) + 5) / 10 ; Increased threshold
     ; variables for going out (restaurant)
-    set vRest minMeet
-    set minRest (random 3) / 10
-    set thrRest ((random 6) + 3) / 10
+    set vRest minRest
+    set minRest (random 5) / 10 ; Adjusted minimum value
+    set thrRest ((random 8) + 5) / 10 ; Increased threshold
     ; variables for cinema
-    set vCinema minMeet
-    set minCinema (random 3) / 10
-    set thrCinema ((random 6) + 3) / 10
+    set vCinema minCinema
+    set minCinema (random 5) / 10 ; Adjusted minimum value
+    set thrCinema ((random 8) + 5) / 10 ; Increased threshold
+    set counter 60
   ]
-
 end
+
 
 
 to citizen_behavior
@@ -227,55 +228,33 @@ end
 
 to proactiveBehavior
   ; Finite State Machine for the proactive states
+  ; Adjust vWalk over time
+  set vWalk (vWalk + dWalk)
   
-  ;########## Updating the Beliefs that are relevant only for the proactive states ##############
-  ;
-  ;
+  ; Adjust vMeet over time
+  set vMeet (vMeet + 0.03) ; Adjusted rate of increase
   
-  ; For testing purposes
-  let StateList ["Study" "Work" "Unemployed" "WalkingAround" "MeetingFriends" "Go_out" "Political" "Demonstration"]
+  ; Adjust other desires over time (vRest and vCinema)
+  set vRest (vRest + 0.02) ; Adjusted rate of increase
+  set vCinema (vCinema + 0.015) ; Adjusted rate of increase
   
+  ; Check if desires exceed thresholds
+  if vWalk >= thrWalk [set proState "WalkingAround"]
+  if vMeet >= thrMeet [set proState "MeetingFriends"]
+  if vRest >= thrRest [set proState "Go_out"]
+  if vCinema >= thrCinema [set proState "Go_out_C"]
   
-vWalk
-minWalk (random 10) / 10
-thrWalk ((random 6) + 3) / 10
-dWalk (random 5) / 100
-vMeet minMeet
-minMeet (random 3) / 10
-thrMeet ((random 6) + 3) / 10
-vRest minMeet
-minRest (random 3) / 10
-thrRest ((random 6) + 3) / 10
-vCinema minMeet
-minCinema (random 3) / 10
-thrCinema ((random 6) + 3) / 10
+  ; Reset desires when changing states
+  ifelse proState != "MeetingFriends" [set vMeet minMeet]
+  [set vMeet (vMeet - 0.01)] ; Decrease desire after leaving meeting state
   
+  ifelse proState != "Go_out" [set vRest minRest]
+  [set vRest (vRest - 0.01)] ; Decrease desire after leaving restaurant state
   
-  let maxValue max(list vWalk vMeet vRest)
-  (ifelse 
-    (maxValue = vWalk) [ set proState "WalkingAround" ]
-    (maxValue = vMeet) [ set proState "MeetingFriends"]
-    (maxValue = vRest) [ set proState "Go_out" ]
-    [ set proState "Error, no state chosen" ]
-  ) 
-
+  ifelse proState != "Go_out_C" [set vCinema minCinema]
+  [set vCinema (vCinema - 0.01)] ; Decrease desire after leaving cinema state
   
-  
-  
-  
-  
-  
-  
-  
-  ;########## Deliberation of states, e.g. deciding on new states depending on new beliefs ##############
-  ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
-  ; like for example walkdesire?, destinationxy, etc.
-  ;
-  
-  ; For testing
-  if Debug [ print (word who " deliberated proState = " proState) ]  
-  
-  ; "Finite State Machine" 
+  ; State transitions
   (ifelse
     proState = "Study" [study]
     proState = "Work" [work]
@@ -283,13 +262,12 @@ thrCinema ((random 6) + 3) / 10
     proState = "WalkingAround" [set walkdesire? true]
     proState = "MeetingFriends" [meeting]
     proState = "Go_out" [go_out]
+    proState = "Go_out_C" [go_out_C]
     proState = "Political" [political]
     proState = "Demonstration" [demonstrate]   
-    ; add more states here, the order does not matter
   )
- 
-  
 end
+
 
 
 ;"""""""""""""""""""" State functions """"""""""""""""""""""""""""""""""""""""""""""
@@ -313,12 +291,20 @@ end
 
 to meeting
   if Debug [print (word who " is in the proactive state MeetingFriends")]
+  set destinationxy one-of patches with [region = "SocialEvents"]
 end
+
 
 to go_out
   if Debug [print (word who " is in the proactive state Go_out")]
   set destinationxy one-of patches with [region = "Restaurant"]
 end
+
+to go_out_C
+  if Debug [print (word who " is in the proactive state Go_out_C")]
+  set destinationxy one-of patches with [region = "Cinema"]
+end
+
 
 to political
   if Debug [print (word who " is in the proactive state Political")]
