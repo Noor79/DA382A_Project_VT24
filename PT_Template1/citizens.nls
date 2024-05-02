@@ -240,27 +240,36 @@ to proactiveBehavior
   
   let maxValue max (list vWalk vMeet vRest vCinema)
 
-  ifelse maxValue = vWalk and vWalk >= thrWalk [
+  let stateChosen false
+
+  if maxValue = vWalk and vWalk >= thrWalk [
     set proState "WalkingAround"
     set vWalk minWalk  
-  ] [
-    ifelse maxValue = vMeet and vMeet >= thrMeet [
-      set proState "MeetingFriends"
-      set vMeet minMeet  
-    ] [
-      ifelse maxValue = vRest and vRest >= thrRest [
-        set proState "Go_out"
-        set vRest minRest  
-      ] [
-        ifelse maxValue = vCinema and vCinema >= thrCinema [
-          set proState "Go_outC"
-          set vCinema minCinema  
-        ] [
-          set proState "Error, no state chosen"
-        ]
-      ]
-    ]
+    set stateChosen true
   ]
+
+  if not stateChosen and maxValue = vMeet and vMeet >= thrMeet [
+    set proState "MeetingFriends"
+    set vMeet minMeet  
+    set stateChosen true
+  ]
+
+  if not stateChosen and maxValue = vRest and vRest >= thrRest [
+    set proState "Go_out"
+    set vRest minRest  
+    set stateChosen true
+  ]
+
+  if not stateChosen and maxValue = vCinema and vCinema >= thrCinema [
+    set proState "Go_outC"
+    set vCinema minCinema  
+    set stateChosen true
+  ]
+
+  if not stateChosen [
+    set proState "Error, no state chosen"
+  ]
+
   
   if Debug [ print (word who " deliberated proState = " proState) ]  
  
