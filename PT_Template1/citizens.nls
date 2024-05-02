@@ -95,6 +95,23 @@ to setup-citizens
     set finishedState false
     set initialCondition false
     set finalCondition false
+     ; variables for walk
+    set vWalk minWalk
+    set minWalk (random 10) / 10
+    set thrWalk ((random 6) + 3) / 10
+    set dWalk (random 5) / 100
+    ; variables for meeting friends
+    set vMeet minMeet
+    set minMeet (random 3) / 10
+    set thrMeet ((random 6) + 3) / 10
+    ; variables for going out (restaurant)
+    set vRest minMeet
+    set minRest (random 3) / 10
+    set thrRest ((random 6) + 3) / 10
+    ; variables for cinema
+    set vCinema minMeet
+    set minCinema (random 3) / 10
+    set thrCinema ((random 6) + 3) / 10
   ]
 
 end
@@ -132,6 +149,10 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
  
+  set vWalk (random 10) / 10
+  set vMeet (random 10) / 10
+  set vRest (random 10) / 10
+  set vCinema (random 10) / 10
   
   (ifelse
     ;add all the reactive behavior in order of their priorities- highest at the top of the list
@@ -270,6 +291,30 @@ to proactiveBehavior
     set proState "Study"
   ]
   
+  let maxValue max (list vWalk vMeet vRest vCinema)
+  
+  ifelse maxValue = vWalk and vWalk >= thrWalk [
+    set proState "WalkingAround"
+    set vWalk minWalk  
+  ] [
+    ifelse maxValue = vMeet and vMeet >= thrMeet [
+      set proState "MeetingFriends"
+      set vMeet minMeet  
+    ] [
+      ifelse maxValue = vRest and vRest >= thrRest [
+        set proState "Go_out"
+        set vRest minRest  
+      ] [
+        ifelse maxValue = vCinema and vCinema >= thrCinema [
+          set proState "Go_outC"
+          set vCinema minCinema  
+        ] [
+          set proState "Error, no state chosen"
+        ]
+      ]
+    ]
+  ]
+  
   ; For testing
   if Debug [print (word who "deliberated proState = " proState)]
   
@@ -339,6 +384,11 @@ end
 to go_out
   if Debug [print (word who " is in the proactive state Go_out")]
   set destinationxy one-of patches with [region = "Restaurant"]
+end
+
+to go_out_C
+  if Debug [print (word who " is in the proactive state Go_out_C")]
+  set destinationxy one-of patches with [region = "Cinema"]
 end
 
 to political
