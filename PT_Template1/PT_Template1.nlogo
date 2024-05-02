@@ -18,6 +18,7 @@ __includes [
     "communication.nls"; contains the extension for FIPA-like communication protocols
     "time_library.nls"; code for the time extension library
     "vid.nls" ; contains the code for the recorder. You also need to activate the vid-extension and the command at the end of setup
+
 ]
 ; ********************end included files ********
 
@@ -37,11 +38,14 @@ globals [
   ;
   ; Global variables used by the citizen agents to adapt their local variables
   L;------------------------current global government legitimacy
-  newArrests;---------------number of newly arrested citizens during the time interval
+  L0; ---------------------- initial legitimacy
+  dL;------------------------difference in legitimacy
+  newarrest;---------------number of newly arrested citizens during the time interval
   alfa;---------------------constant factor that determines how fast arresting episodes are forgotten
   glbFear;------------------value for the collective global fear amongst citizen agents
   nArrests;-----------------Total number of currently arrested citizens
   Jmax;---------------------Maximum jail term that a citizen can be sentenced to
+
 
 
   ; Global variables for the Observer to monitor the dynamics and the result of the simulation
@@ -59,12 +63,12 @@ globals [
   tick-datetime
   sim-time               ; The current simulation time
   sim-start-time
-  start-time
+  ;start-time
   time-simulated   ; Text string showing how much time has been simulated, with the units specified on the Interface
   sim-start-logotime
-
   timeTaker-stop-time
-
+  dailyFlag
+  update-time-flags
 
 
   ;----- Spatial units, locations
@@ -78,8 +82,7 @@ globals [
   locRestaurant; location of the restaurant
   locSocialEvents; location of the volunteer place
   numFreeCitizens
-  newarrest
-
+  counter1;
 ]
 
 ;---- General agent variables
@@ -110,6 +113,11 @@ to setup
   set numFreeCitizens 0
   set numPrisoners 0
   set newarrest 0
+  set alfa -0.01
+  set L 1
+  set counter1 0
+  set L0 (0.7 + random-float 0.2)
+
 
   ; setup of the environment:
   setup-environment ;
@@ -123,6 +131,8 @@ to setup
 
   ; time section
   initTime ; initialize the time and clock variables
+
+  set dailyFlag false
 
 
 
@@ -149,25 +159,32 @@ to go
   ;---- Time updates
   ;
   tick ;- update time
-  update-time-flags ;- update time
+  ;update-time-flags ;- update time
 
   ;UPDATES THE VALUE OF TIME-SIMULATED FOR DISPLAY PURPOSE
-  set time-simulated (word (time:difference-between sim-start-time sim-time "minute") " minutes")
+  set time-passed (word (time:difference-between start-time current-time "minute") " minutes")
 
   timeWrapAround
 
-
+  if getCurrentHour = 8 and getCurrentMinute = 0 [set dailyFlag true]
   ;---- Update of Global Variables
   ; update of global variables like for example fear, frustration and legitimation
   ;
-  ; if dailyFlag [
-  set L (1 / (exp((newarrest / num-citizens))))
-  count-new-arrests
-  ;    set dailyFlag false
-   ; ]
+  if dailyFlag [
+    ;set L (1 / (exp((newarrest / num-citizens))))
+    count-new-arrests
+    set dL ((L - L0 - newarrest / num-citizens) * exp(alfa))
+    ;set L max 0 (min (L0 + dl) 1)
+    set L max (list 0 (min (list (L0 + dL) 1)))
+    ;set L max 0 (min (L0 + dl) 1)
+    set counter1 0
+    set dailyFlag false
+    ]
+
 
   ; update for the observer functions like changes in number of arrests
   ;
+
 
 
   ;---- Agents to-go part -------------
@@ -177,15 +194,16 @@ to go
     ; based on the type of agent
     if (breed = citizens) [
       citizen_behavior ; code as defined in the include-file "citizens.nls
+          count-new-arrests
+      set dL ((L - L0 - newarrest / num-citizens) * exp(alfa))
+      ;set L max 0 (min (L0 + dl) 1)
+      set L max (list 0 (min (list (L0 + dL) 1)))
       ]
     if (breed = cops) [
       cop_behavior ; code as defined in the include-file "cops.nls"
       ]
 
   ]
-
-
-
 
 
 
@@ -250,7 +268,7 @@ num-citizens
 num-citizens
 1
 150
-6.0
+40.0
 1
 1
 NIL
@@ -299,7 +317,7 @@ num-cops
 num-cops
 0
 150
-9.0
+12.0
 1
 1
 NIL
@@ -509,7 +527,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-0
+1
 
 MONITOR
 221
@@ -541,6 +559,28 @@ MONITOR
 NIL
 count-free-citizens
 0
+1
+11
+
+MONITOR
+365
+160
+422
+205
+NIL
+dL
+17
+1
+11
+
+MONITOR
+353
+86
+423
+131
+NIL
+counter1
+17
 1
 11
 

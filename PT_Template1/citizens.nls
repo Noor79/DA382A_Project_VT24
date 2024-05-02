@@ -65,6 +65,7 @@ citizens-own [
   finalCondition; ----flag to indicate if the final condition is met
   safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
   agTimer1;---------- local timer for agents
+  agAlarm1
   
 ]
 
@@ -281,7 +282,7 @@ to proactiveBehavior
   ][
     ; code while the proactive state is not finished yet
     ; test 'study'
-    set proState "Study"
+    set proState "WalkingAround"
   ]
   
   ; For testing
@@ -316,7 +317,7 @@ to study
     if Debug [print (word who " has arrived at the university")]
     ]
   if initialCondition and not finalCondition [;wait until timeTaker is finished
-    if localtimeTakerDone agTimer1 [set finalCondition true]
+    if timeTakerDone [set finalCondition true]
   ]
   if finalCondition [
     set finishedState true

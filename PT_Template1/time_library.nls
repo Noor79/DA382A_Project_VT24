@@ -1,56 +1,45 @@
+;===========================================
+;CITIZENS NEED TO OWN VARIABLES:           |
+;agTimer1                                  |
+;agAlarm1                                  |
+;===========================================
+
 extensions [time]
 
+globals
+[
+  current-time             ;THE CURRENT TIME IN THE SIMULATION
+  start-time               ;START TIME OF THE SIMULATION
+  time-passed              ;TEXT STRING SHOWING HOW MUCH TIME HAS BEEN SIMULATED  
+]
 
 ;=======================================================================================================================================
 ;INITIALIZATION OF TIME.
 to initTime
-  set tick-datetime time:anchor-to-ticks (time:create "2024-04-23 10:00:0") 1 "minute"
-
-  set sim-start-time "2024/04/20 22:50:00"
-
-  set sim-start-logotime time:create-with-format sim-start-time "yyyy/M/d HH:mm:ss"  ; NEVER use "YYYY" instead of "yyyy"
-
-  set sim-time time:anchor-to-ticks sim-start-time 1 "minute"
-  ;set sim-time time:anchor-to-ticks sim-start-time 1 "day"
-
-  ;initialize time
-  set start-time time:copy sim-time
-  set time-simulated 0
-  
+  set start-time "2024/04/20 12:00:00"
+  set current-time time:anchor-to-ticks start-time 1 "minute"
+  set time-passed 0
 end
 
 ;=======================================================================================================================================
 ;STARTS A TIMER FROM THE CURRENT SIMULATION TIME. THE TIMER IS CHOSEN BY INPUTTING THE HOUR, MINUTE.
+;EXAMPLE OF HOW TO USE THIS, SETTING A TIMER FOR 1.5 HOURS:
+;set agTimer1 timeTaker 1 30
 to-report timeTaker [hour minute]
-
-  let temp-time time:plus sim-time hour "hour"
+  let temp-time time:plus current-time hour "hour"
   set temp-time time:plus temp-time minute "minute"
 
   report temp-time
-
 end
 ;=======================================================================================================================================
-;CHECKS WETHER A TIMETAKER HAS BEEN FINISHED
+;RETURNS TRUE OR FALSE DEPENDING ON WHETHER A TIMETAKER HAS BEEN FINISHED OR NOT: if timeTakerDone
+;MUST BE CALLED ON EACH GO
 to-report timeTakerDone
-  ifelse timeTaker-stop-time != nobody
+  ifelse agTimer1 != nobody
   [
-    ifelse time:is-equal? sim-time timeTaker-stop-time
+    ifelse time:is-equal? current-time agTimer1
     [
-      set timeTaker-stop-time nobody
-      report true
-    ]
-    [report false]
-  ]
-  [report false]
-end
-; alternative that works for individual agents
-;CHECKS WETHER A TIMETAKER HAS BEEN FINISHED, requires local variable agTimer
-to-report localtimeTakerDone [agTimer]
-  ifelse agTimer != nobody
-  [
-    ifelse time:is-equal? sim-time agTimer
-    [
-      set agTimer nobody
+      set agTimer1 nobody
       report true
     ]
     [report false]
@@ -61,69 +50,80 @@ end
 ;=======================================================================================================================================
 ;RETURNS A BOOLEAN, TRUE OR FALSE, IF THE CURRENT SIMULATION TIME IS BETWEEN THE INPUTS min_hour AND max_hour. INPUT CAN ONLY BE HOURS AND NOT MINUTES!
 to-report betweenHours [min_hour max_hour]
-
-  ifelse (time:get "hour" sim-time = min_hour and time:get "minute" sim-time >= 0) or (time:get "hour" sim-time = max_hour and time:get "minute" sim-time = 0)
+  ifelse (time:get "hour" current-time = min_hour and time:get "minute" current-time >= 0) or (time:get "hour" current-time = max_hour and time:get "minute" current-time = 0)
     [report true]
     [report false]
 end
+
 ;=======================================================================================================================================
-;WRAPS THE TIME AROUND FROM 23 TO 06. DOES SO BY MANIPULATING THE TICK VALUE TO MATCH THAT OF THE SURPASSED NIGHT.
+;WRAPS THE TIME AROUND FROM 23 TO 06. DOES SO BY MANIPULATING THE TICK VALUE TO MATCH THAT OF THE SURPASSED NIGHT. SHOULD BE CALLED EVERY TICK.
 to timeWrapAround
-
-  if time:get "hour" sim-time = 23
+  set time-passed (word (time:difference-between start-time current-time "minute") " minutes")
+  if time:get "hour" current-time = 23
   [
-
-    repeat 420
-    [tick]
-    set time-simulated (word (time:difference-between sim-start-time sim-time "minute") " minutes")
+    ;ask turtles with [breed = citizens] [set dailyFlag? false]
+    set current-time time:plus current-time 7 "hour"
+    set current-time time:anchor-to-ticks current-time 1 "minute"
+    reset-ticks
+    
+    set time-passed (word (time:difference-between start-time current-time "minute") " minutes")
   ]
 end
+
 ;=======================================================================================================================================
 ;REPORTS THE CURRENT SIMULATION TIME IN YYYY-MM-D h:mm
 to-report show-time
-  report  time:show sim-time "yyyy-MM-d H:mm"
+  report  time:show current-time "yyyy-MM-d H:mm"
 end
+
 ;=======================================================================================================================================
-; TIME FUNCTIONS
-to update-time-flags
-  ; The time is measured in ticks where one tick is an hour.
-  ; The time is tracked in the time variable and this variable is
-  ; reset every week (or every 168 hours).
-  ; Set the time
-  set time (time + 1)
-  set time time mod 168
-  
-  ; Determine if it is morning, evening or weekend
-  let hour-of-day time mod 24
-
-  ifelse (6 <= hour-of-day and hour-of-day <= 10)[
-    set flagMorning true
-  ] [
-  set flagMorning false
-  ]
-
-  ; Check if it is evening
-  ifelse (16 <= hour-of-day and hour-of-day <= 22)[
-    set flagEvening true
-
-  ] [
-    set flagEvening false
-  ]
-
-  ; Check if it is weekend
-  ifelse (time >= 120) [
-    set flagWeekend true
-  ] [
-    set flagWeekend false
-  ]
-  if isWeekend
-  [print "weeknd"]
-
-  ;if Debug [print word "Time: " time]
-end
-
+;RETURNS A BOOLEAN, TRUE OR FALSE, IF THE CURRENT SIMULATION TIME IS ON A SATURDAY OR SUNDAY
 to-report isWeekend
-  ifelse time:get "weekday" sim-time = 6 or time:get "weekday" sim-time = 7
+  ifelse time:get "weekday" current-time = 6 or time:get "weekday" current-time = 7
   [report true]
   [report false]
 end
+
+;=======================================================================================================================================
+;RETURNS THE CURRENT MINUTE
+to-report getCurrentMinute
+  report time:get "minute" current-time
+end
+
+;=======================================================================================================================================
+;RETURNS THE CURRENT HOUR
+to-report getCurrentHour
+  report time:get "hour" current-time
+end
+
+;=======================================================================================================================================
+;RETURNS THE CURRENT DAY AS A INTEGER, MONDAY=1, TUESDAY=2, ETC.
+to-report getCurrentDay
+  report time:get "weekday" current-time
+end
+
+;=======================================================================================================================================
+;SET AN ALARM THIS WAY
+;alarm "2024/04/20 12:00:00"
+to alarm [date]
+  set agAlarm1 date
+end
+;=======================================================================================================================================
+;RETURNS TRUE OR FALSE DEPENDING ON WHETHER AN ALARM HAS BEEN FINISHED OR NOT
+;MUST BE CALLED ON EACH GO
+to-report alarmDone
+  ifelse agAlarm1 != nobody
+  [
+    ifelse time:is-equal? current-time agAlarm1
+    [
+      set agAlarm1 nobody
+      report true
+    ]
+    [report false]
+  ]
+  [report false]
+end
+
+
+
+
