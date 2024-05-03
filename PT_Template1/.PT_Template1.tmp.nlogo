@@ -278,7 +278,7 @@ num-citizens
 num-citizens
 1
 150
-25.0
+40.0
 1
 1
 NIL
@@ -327,7 +327,7 @@ num-cops
 num-cops
 0
 150
-45.0
+10.0
 1
 1
 NIL
@@ -530,10 +530,10 @@ L
 11
 
 CHOOSER
-292
-408
-474
-453
+261
+399
+443
+444
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
@@ -584,17 +584,17 @@ glbFear
 11
 
 PLOT
-290
-467
-490
-617
+289
+502
+489
+652
 Global Fear
 NIL
 NIL
 0.0
 10.0
 0.0
-1.0
+10.0
 true
 false
 "" ""
