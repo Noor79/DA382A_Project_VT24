@@ -8,18 +8,21 @@
 ;
 ;
 ;---------------------------------------------------
+;Ömer&Oscar&Adam
 
 ;---- Specific, local variables of cop-agents
 
 
 cops-own [
-  ;pvision ; cop-vision is set by slider
+  pvision ; cop-vision is set by slider
   cop-speed
   order ; Received order that currently is being carried out. Enumeration = rule-of-law,
   ; arrest-troublemakers,looking-for-terrorists, suppress-riots
   last-hunted
   last-suspect
+  my-beliefs ; List to store beliefs about the environment, like number of nearby citizens
 ]
+
 
 
 
@@ -51,7 +54,13 @@ to cop_behavior
   
   
   ;########## Updating the Beliefs, e.g. the agent's information about its environment ##############
-  ;
+  
+  update-beliefs
+  
+  ; Kontrollera om det finns behov av förstärkning
+  if needs-reinforcement? [
+    request-reinforcement
+  ]
   ; suspects = citizens nearby?
   let suspect one-of citizens-here with [inPrison? = false] ; need to make sure the citizen is not in jail, otherwise can the cop be trapped besides
   if any? citizens-here with [inPrison? = false] [ask suspect [ set fear (1 + 5 * f) * fear ]]
@@ -89,7 +98,33 @@ to cop_behavior
  
   
 end 
+
+; En funktion för att uppdatera polisens tron om sin omgivning
+to update-beliefs
+  let nearby-citizens count citizens in-radius pvision with [jailsentence = 0]
+  let nearby-cops count other cops in-radius pvision
+  set my-beliefs (list nearby-citizens nearby-cops)
+end
   
+; Funktion för att bestämma om förstärkning behövs
+to-report needs-reinforcement?
+  let citizens-nearby item 0 my-beliefs
+  let cops-nearby item 1 my-beliefs
+  report (citizens-nearby > 2 * cops-nearby)
+end
+
+; Funktion för att begära förstärkning
+to request-reinforcement
+  let help-message create-message "request"
+  set help-message add-content "Need reinforcement" help-message
+  ; Vi antar här att alla poliser ska få meddelandet
+  print (word "Cop " who " requests reinforcement due to high citizen count.")
+  ask cops [
+    receive help-message
+  ]
+end
+
+
 
 to rule-of-law [suspect hunted]
 
