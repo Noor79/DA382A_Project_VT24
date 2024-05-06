@@ -143,7 +143,9 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
     [proactiveBehavior] ; this function always at the end by itself
   )
   
-  
+  if ( not empty? incoming-queue)[
+    listen-to-messages
+  ]
 end
 
 ;""""""""""""""" Update Functions """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -304,9 +306,35 @@ to proactiveBehavior
   
 end
 
+;utilities and the degree of fear,
 
 ;"""""""""""""""""""" State functions """"""""""""""""""""""""""""""""""""""""""""""
-
+to listen-to-messages
+  let msg 0
+  let performative 0
+  let content 0
+   set msg get-message
+   set performative get-performative msg
+  
+  if performative = "meeting-request" [
+    if fear < 2[ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
+      set content get-content msg    
+  ] 
+  ]
+  if performative = "meetingatmine" [
+    if fear < 2[ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
+      set content get-content msg    
+  ] 
+  ]
+  
+  
+  
+  
+end  
+  
+  
+  
+  
 to study
   if Debug [print (word who " is in the proactive state Study")]
   if (not initialCondition) and (not finalCondition) [set destinationxy one-of patches with [region = "University"]]
