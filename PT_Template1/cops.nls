@@ -17,6 +17,7 @@ cops-own [
   cop-speed
   order ; Received order that currently is being carried out. Enumeration = rule-of-law,
   ; arrest-troublemakers,looking-for-terrorists, suppress-riots
+  is-helping? ;Wheter the cop-agent is helping or not
 ]
 
 
@@ -26,6 +27,7 @@ cops-own [
 
 
 to setup-cops
+  set help-radius 5
 create-cops num-cops [
     set label who
     set shape "person police" 
@@ -37,6 +39,7 @@ create-cops num-cops [
     set beliefs [] 
     set intentions []
     set incoming-queue []
+    set is-helping? false
   ]
   
   
@@ -72,9 +75,24 @@ to cop_behavior
   ;################## REACTIVE BEHAVIOR ####################################
   ; subsumption hierarchy with highest priority in first if-sentence
   ; hiearchy of orders
- 
-   
+  
+  let msg nobody
+  while [not empty? incoming-queue] [
+    let current_msg get-message  
+    if get-performative current_msg = "help-request" [
+      set order "cop-need-help"
+      set msg current_msg  
+    ]
+  ]
+  
+  
+  
   (ifelse 
+    order = "cop-need-help" [
+      if msg != nobody [
+        handle-help msg
+      ]
+    ]
     order = "rule-of-law" [
       (ifelse
         true [patrolAround])]
@@ -88,23 +106,28 @@ to cop_behavior
   
 end 
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+to handle-help [msg]
+  let sender-id get-sender msg
+  let sender-cop one-of cops with [who = read-from-string sender-id]
+
+  if sender-cop != nobody and distance sender-cop < help-radius and not is-helping? [
+    set is-helping? true
+    move-to sender-cop 
+
+    ; Inform other cops
+    let help-confirm create-message "help-confirm"
+    set help-confirm add-content (word "Helping cop " who " assisting cop " sender-id) help-confirm
+    broadcast-to cops help-confirm who 
+    
+    while [is-helping?] [
+      ; continue helping until ??
+      set is-helping? false
+    ]
+
+    print (word who "Helped cop " sender-cop)   
+  ]
+end
  
 
 to patrolAround
