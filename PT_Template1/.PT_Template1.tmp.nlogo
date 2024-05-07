@@ -1,4 +1,3 @@
-; DA382A_Project_VT24
 ; template for the programming task with cops and citizen agents
 ;
 ; See the description in the file README on GitHub on how to work with the project files

@@ -2,7 +2,7 @@
 
 ; FILE HISTORY:
 
-; 2024-01-29 Initial template, gks
+; 2024-01-29 Initial template, gks, Edited by: Oscar, Ömer, Adam
 ; 
 ;
 ;---------------------------------------------------
@@ -84,7 +84,16 @@ to setup-citizens
     setxy [pxcor] of homeLoc [pycor] of homeLoc 
     set friendList []
     set beliefs []
-    set intentions []
+      let terrorist-threshold 0.1 ;  threshold for terrorists
+    let is_terrorist? (random-float 1.0) < terrorist-threshold
+    ifelse is_terrorist? [
+       set color gray ; Gray citizen = terrorist 
+      set intentions ["terrorist"]
+    ] [
+      set intentions []
+    ]
+    
+    ;  set intentions []
     set incoming-queue []
     set destinationxy []
     set walkdesire? false
@@ -416,5 +425,4 @@ end
 to decrease-anger
   set anger anger * (1 - 10 * percAnger)
 end
-
 

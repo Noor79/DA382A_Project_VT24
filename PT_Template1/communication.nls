@@ -3,7 +3,7 @@
 ;;; Includes primitives for message creation and handling in NetLogo 
 ;;; Original Version for Netlogo 2 (2005) I. Sakellariou
 ;;; Adapted to NetLogo 4 (2008) I. Sakellariou
-
+;;; Edited by: Oscar, Ömer, Adam
 ;;; Requirements
 ;;; 1) All agents that are able to communicate MUST have a declated -own variable incoming-queue.
 ;;; This is the variable to which all messages are recorded. So, in your model if there is a breed of turtles 
@@ -27,6 +27,10 @@
 ;; The commented out line represents an alternative method. 
 ;; Problem: What if the agent I am sending the message is "killed" 
 ;; Solution: Nothing Happens. Could yield an error message Alternative: create a safe send.
+;; Define a new performative for help requests
+globals [help_performative]
+
+
 to send [msg]
   let recipients get-receivers msg
   let recv 0
@@ -39,9 +43,58 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Message reception deals with updating incoming-queue
 to receive [msg]
-   if show_messages [show msg]
-   set incoming-queue lput msg incoming-queue
-end 
+
+
+  if show_messages [show msg]
+  set incoming-queue lput msg incoming-queue
+  
+  ; Process the message to identify the requesting cop and the receiving cops
+  let requesting-cop extract-requesting-cop msg
+  let receiving-cops extract-receiving-cops msg
+  
+  ; Print information about the requesting cop and the receiving cops
+  print (word "Requesting Cop: " requesting-cop)
+  print (word "Receiving Cops: " receiving-cops)
+  
+  ; Check if the message contains information about a terrorist
+  let content get-content msg
+  if member? "terrorist" content [
+    ; Extract location from the message
+    let location extract-location content
+    ; Move the receiving cop to the specified location
+    move-to-location location
+  ]
+end
+
+to-report extract-location [content]
+  ; Extract the location from the content
+  let parts remove "Location" (word content)
+  let location item 2 parts ; Assuming location is the third part after Location
+  report location
+end
+; Move to the location in the message
+to move-to-location [location]
+  let xcorT item 0 location
+  let ycorT item 1 location
+  move-to patch xcorT ycorT
+end
+
+to-report extract-requesting-cop [msg]
+  ; Extract the sender ID from the message
+  let sender get-sender msg
+  ; Extract the requesting cop ID from the sender information
+  let requesting-cop remove "Cop " sender
+  report requesting-cop
+end
+
+to-report extract-receiving-cops [msg]
+  ; Extract the receivers from the message
+  let receivers get-receivers msg
+  ; Filter out the requesting cop from the receivers
+  let receiving-cops remove (word "Cop " who) receivers
+  report receiving-cops
+end
+
 
 ;; This reporter returns the next message in the list and removes it from the queue.
 to-report get-message
@@ -91,15 +144,23 @@ end
 
 ;; Accesing information on Messages
 ;; Reports the sender of a message
-to-report get-sender [msg]
+to-report get-sender [msg] 
   report remove "sender:" first (filter [i -> not is-number? i and member? "sender:" i] msg) 
   ;;report item ((position "sender:" msg) + 1) msg 
 end
 
 ;; Reports (returns) the content of a message
 to-report get-content [msg]
-  report item (position "content:" msg + 1) msg 
+  let content-position position "content:" msg
+  ifelse is-number? content-position [
+    ; Extract the content if "content:" exists in the message
+    report item (content-position + 1) msg
+  ] [
+    ; Return an empty string if "content:" doesn't exist in the message
+    report ""
+  ]
 end
+
 
 ;; Reports the list of receivers of a message
 to-report get-receivers [msg]
@@ -142,3 +203,4 @@ to-report add [msg field value]
   [report lput value lput field msg]
   [report lput (word field value) msg]
 end  
+

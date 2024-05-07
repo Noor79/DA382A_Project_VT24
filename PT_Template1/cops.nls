@@ -2,13 +2,12 @@
 
 ; FILE HISTORY:
 
-; 2022-04-10 Initial template, gks
+; 2022-04-10 Initial template, gks, Edited by: Oscar, Ömer, Adam
 ; 
 ;
 ;
 ;
 ;---------------------------------------------------
-;Ömer&Oscar&Adam
 
 ;---- Specific, local variables of cop-agents
 
@@ -22,13 +21,6 @@ cops-own [
   last-suspect
   my-beliefs ; List to store beliefs about the environment, like number of nearby citizens
 ]
-
-
-
-
-
-
-
 
 to setup-cops
 create-cops num-cops [
@@ -51,16 +43,12 @@ end
 
 
 to cop_behavior
-  
-  
   ;########## Updating the Beliefs, e.g. the agent's information about its environment ##############
-  
   update-beliefs
-  
   ; Kontrollera om det finns behov av förstärkning
-  if needs-reinforcement? [
-    request-reinforcement
-  ]
+  ;if needs-reinforcement? [
+ ;   request-reinforcement
+;  ]
   ; suspects = citizens nearby?
   let suspect one-of citizens-here with [inPrison? = false] ; need to make sure the citizen is not in jail, otherwise can the cop be trapped besides
   if any? citizens-here with [inPrison? = false] [ask suspect [ set fear (1 + 5 * f) * fear ]]
@@ -79,14 +67,10 @@ to cop_behavior
   ;set order "rule-of-law"
   ;set order "arrest-troublemakers"
 
-    
-    
-
   ;################## REACTIVE BEHAVIOR ####################################
   ; subsumption hierarchy with highest priority in first if-sentence
   ; hiearchy of orders
  
-   
   (ifelse 
     order = "rule-of-law" [rule-of-law suspect hunted]
     order = "arrest-troublemakers" [
@@ -96,7 +80,6 @@ to cop_behavior
         true [patrolAround])]
   ) 
  
-  
 end 
 
 ; En funktion för att uppdatera polisens tron om sin omgivning
@@ -106,52 +89,75 @@ to update-beliefs
   set my-beliefs (list nearby-citizens nearby-cops)
 end
   
-; Funktion för att bestämma om förstärkning behövs
-to-report needs-reinforcement?
-  let citizens-nearby item 0 my-beliefs
-  let cops-nearby item 1 my-beliefs
-  report (citizens-nearby > 2 * cops-nearby)
-end
-
-; Funktion för att begära förstärkning
-to request-reinforcement
-  let help-message create-message "request"
-  set help-message add-content "Need reinforcement" help-message
-  ; Vi antar här att alla poliser ska få meddelandet
-  print (word "Cop " who " requests reinforcement due to high citizen count.")
-  ask cops [
-    receive help-message
-  ]
-end
-
-
-
 to rule-of-law [suspect hunted]
 
   if random 9 > 0 [set suspect nobody set hunted nobody]
-
   if hunted = last-hunted [set hunted nobody]
   if suspect = last-suspect [set suspect nobody]
-
  (ifelse
     suspect != nobody and random 29 = 0 [arrest suspect set last-suspect suspect]
     hunted != nobody [catch hunted set last-hunted hunted]
     true [patrolAround])
 end
  
-
 to patrolAround
   let places neighborhood with [region = "empty" or region = "TownSquare"]
   if any? places [move-to one-of places]
 end
-
 to arrest [suspect]
   ; move the citizen to prison and mark them as arrested
   if Debug [print (word " cop-agent: " who " puts suspect: " suspect " to prison!")]
-  ask suspect [
-           set jailsentence random max-jailterm
-           gotoprison
-        ]
+  ; Check if there are any terrorists nearby
+  ifelse any? citizens-here with [intentions = ["terrorist"]] [
+    ; Calculate the number of terrorists within vision range
+    let terrorists count citizens in-radius pvision with [intentions = ["terrorist"] and inPrison? = false]
+    ; Calculate the number of cops within vision range
+    let cops-in-range count other cops in-radius pvision
+    ; Check if there are more cops than terrorists
+    ifelse cops-in-range >= (terrorists * 2) [
+      ; Enough cops to arrest the terrorist
+      ask suspect [
+        set jailsentence random max-jailterm
+        gotoprison
+      ]
+  ] [
+      ; Not enough cops to arrest the terrorist notify other cops for reinforcement
+      let help-message create-message "request"
+      ;Location of the suspect
+      let location (word "Location " [xcor] of suspect "-" [ycor] of suspect)
+      ;The message being sent (includes location)
+       let content (word "Need reinforcement to arrest a terrorist by " who " Location:" location)
+      print (word "Need reinforcement to arrest a terrorist by " who" " location)
+     ; print (location)
+      ; Add content and location to the help message
+      set help-message lput content help-message
+     
+      ; Broadcast the request for reinforcement to neaby cops
+      broadcast-to (other cops in-radius 10) help-message self
+    ]
+  ] [
+    ; No terrorists nearby check if reinforcement is needed for high citizen count
+    let citizens-nearby count citizens-here with [inPrison? = false]
+    let cops-nearby count other cops in-radius pvision
+    if citizens-nearby > 2 * cops-nearby [
+      ; Request reinforcement for high citizen count
+      let help-message create-message "request"
+      ;The message that is being sent
+      let content (word "Need reinforcement due to high citizen count by " who)
+      print (word "Need reinforcement due to high citizen count by " who)
+      ; Add content to the help message
+      set help-message lput content help-message
+      ; Broadcast the request for reinforcement to all cops
+        broadcast-to (other cops in-radius 10) help-message self
+
+    ] 
+      ; No terrorists nearby and no high citizen count
+      ask suspect [
+        set jailsentence random max-jailterm
+        gotoprison
+      ]
+    
+  ]
 end
 
 to catch [hunted]
@@ -162,4 +168,3 @@ to catch [hunted]
   let pplaces neighborhood with [region = "empty" or region = "TownSquare"]
   if any? pplaces [move-to one-of pplaces]
 end
-
