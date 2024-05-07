@@ -78,7 +78,7 @@ to cop_behavior
     ;antal poliser som ptrulerar
     let patrolRate count cops with [order = "patrol"]
     ;om antal är mindre än 20%, görs så länge villkor ej uppfyllt
-    if patrolRate < count (cops/5)[
+    if patrolRate < count cops / 5[
       
      TODO: skicka order till en av poliser att patrulera
       
