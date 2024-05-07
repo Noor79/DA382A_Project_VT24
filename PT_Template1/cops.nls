@@ -128,3 +128,28 @@ to catch [hunted]
   if any? pplaces [move-to one-of pplaces]
 end
 
+to handle_incoming_queue
+   let msg item 0 incoming-queue  
+   ifelse is-empty? msg [print "No messages"] [
+    if get-performative msg = "stop-demonstration" [handle-demonstration get-content msg]
+    if get-performative msg = "retrive" []
+    if get-performative msg = "patrol" []
+    set incoming-queue remove-item 0 incoming-queue
+   
+    let number-of-messages length incoming-queue
+    let i 1
+    while [i < number-of-messages] [
+      let message item i incoming-queue
+      set incoming-queue lput message incoming-queue
+    ]
+      set i i + 1
+   ]
+end 
+
+to handle-demonstration [coordinate]
+  
+end 
+
+to-report is-empty? [value]
+  report value = false
+end
