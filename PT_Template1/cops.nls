@@ -22,11 +22,6 @@ cops-own [
 ]
 
 
-
-
-
-
-
 to setup-cops
 create-cops num-cops [
     set label who
@@ -89,6 +84,25 @@ to cop_behavior
  
   
 end 
+
+
+to handle-patrol-message 
+  
+  let patrol-areas (list "Townsquare" "empty")
+  
+  let target-area one-of patrol-areas
+  
+  
+  ifelse region != target-area[
+    move-to one-of patches with [region = target-area]
+ 
+  ][
+  
+    patrolAround
+  ]
+  
+end
+
   
 
 to rule-of-law [suspect hunted]

@@ -124,11 +124,6 @@ to setup
   ; time section
   initTime ; initialize the time and clock variables
 
-
-
-
-
-
   ; must be last in the setup-part:
   reset-ticks
   ;recorder
