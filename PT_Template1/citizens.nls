@@ -226,6 +226,8 @@ to proactiveBehavior
   
   ;########## Updating the Beliefs that are relevant only for the proactive states ##############
   ;
+  ; TODO: kolla om någon vill träffas, svara.
+  handle-meeting-request
   ;
   
   
@@ -292,6 +294,8 @@ to proactiveBehavior
   if vMeet >= thrMeet [if proState != "MeetingFriends" [increase-frustration]]
   if vRest >= thrRest [if proState != "Go_out" [increase-frustration]]
   if vCinema >= thrCinema [if proState != "Go_out" [increase-frustration]]  ; TODO?
+  
+  
  
   
 end
@@ -415,6 +419,21 @@ end
 
 to decrease-anger
   set anger anger * (1 - 10 * percAnger)
+end
+
+to handle-meeting-request
+  let number-of-messages length incoming-queue
+  let i 0
+  while [i < number-of-messages] [
+    let message item i incoming-queue
+    let performative get-performative message
+    if performative = "meeting-request"[
+      
+      print("someone sent a meeting request")
+      ;TODO handle meeting request based on own utilities
+    ]
+    set i i + 1
+  ]
 end
 
 

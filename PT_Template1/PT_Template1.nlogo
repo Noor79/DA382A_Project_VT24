@@ -330,7 +330,7 @@ cop-vision
 cop-vision
 1
 100
-9.0
+10.6
 0.1
 1
 NIL
