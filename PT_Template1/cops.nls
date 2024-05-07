@@ -19,6 +19,8 @@ cops-own [
   ; arrest-troublemakers,looking-for-terrorists, suppress-riots
   last-hunted
   last-suspect
+  police-chief? ; Police chief or not
+  colleagues ; List of all the police chiefs
 ]
 
 
@@ -41,6 +43,8 @@ create-cops num-cops [
     set incoming-queue []
     set last-hunted nobody
     set last-suspect nobody
+    set police-chief? false
+    set colleagues []
   ]
   
   
@@ -63,14 +67,18 @@ to cop_behavior
     set order "rule-of-law"
   ] 
   if copSource = "arrest-troublemakers"
-[
-  set order "arrest-troublemakers"
-
+  [
+    set order "arrest-troublemakers"
+    
   ]
   ;set order "rule-of-law"
   ;set order "arrest-troublemakers"
-
+  
+  if police-chief? [
+  
     
+  ]
+  
     
 
   ;################## REACTIVE BEHAVIOR ####################################
