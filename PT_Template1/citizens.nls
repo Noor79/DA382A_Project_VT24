@@ -143,7 +143,7 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
     [proactiveBehavior] ; this function always at the end by itself
   )
   
-  if ( not empty? incoming-queue)[
+  if ( not empty? incoming-queue)[ ; VILKEN PRIORITET?
     listen-to-messages
   ]
 end
@@ -317,18 +317,25 @@ to listen-to-messages
    set performative get-performative msg
   
   if performative = "meeting-request" [
-    if fear < 2[ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
-      set content get-content msg    
-  ] 
+    ifelse fear < 0.5 [ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
+      ;set content get-content msg   
+      set destinationxy get-content msg 
+      
+  ] [;VILL INTE
+    ]
   ]
   if performative = "meetingatmine" [
-    if fear < 2[ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
+    ifelse fear < 0.5 [ ;HITTAR BARA PÅ FATTAR 0 vill träffa kompis typ
       set content get-content msg    
-  ] 
-  ]
+  ] [ ; VILL INTE
+    ]
+  ]  
   
-  
-  
+    
+end  
+
+
+to send-a-little-message
   
 end  
   
