@@ -66,10 +66,11 @@ to receive [msg]
   ]
 end
 
+
 to-report extract-location [content]
   ; Extract the location from the content
   let parts remove "Location" (word content)
-  let location item 2 parts ; Assuming location is the third part after Location
+  let location (word item 0 parts "-" item 1 parts) 
   report location
 end
 ; Move to the location in the message
