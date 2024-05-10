@@ -116,8 +116,7 @@ to arrest [suspect]
   ; move the citizen to prison and mark them as arrested
   if Debug [print (word " cop-agent: " who " puts suspect: " suspect " to prison!")]
   ask suspect [
-           ;set jailsentence random max-jailterm
-    set jailsentence 1000
+    set jailsentence random max-jailterm
     set counter1 counter1 + 1
            gotoprison
         ]
