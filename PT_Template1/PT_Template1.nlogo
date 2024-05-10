@@ -146,6 +146,7 @@ end
 ; ########################## TO GO/ STARTING PART ########################
 ;;
 to go
+
   ;---- Time updates
   ;
   tick ;- update time
@@ -239,7 +240,7 @@ GRAPHICS-WINDOW
 0
 1
 ticks
-30.0
+60.0
 
 SLIDER
 23
@@ -250,7 +251,7 @@ num-citizens
 num-citizens
 1
 150
-6.0
+21.0
 1
 1
 NIL
@@ -509,7 +510,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-0
+1
 
 MONITOR
 221

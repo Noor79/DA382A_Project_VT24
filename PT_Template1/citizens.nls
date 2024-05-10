@@ -66,6 +66,8 @@ citizens-own [
   safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
   agTimer1;---------- local timer for agents
 
+  weeklyFlag
+
 ]
 
 
@@ -89,18 +91,22 @@ to setup-citizens
     set destinationxy []
     set walkdesire? false
     set counter 0 ; all-purpose counter
+    set k 3.03  ; constant for finetuned arrest probability
     set f 0.05
-    set fear 0.01
+    set fear 0.1
     set risk random-float 1.0
     set finishedState false
     set initialCondition false
     set finalCondition false
+    set weeklyFlag false
   ]
 
 end
 
 
 to citizen_behavior
+
+  if Debug [print (word who " has fear: " fearValue)]
 
 ;########## UPDATING the Beliefs, e.g. the agent's information about its environment ##############
 
@@ -122,11 +128,11 @@ ifelse (region != "empty" and region != "TownSquare") [set safespot true][set sa
 ;--- update the local values for pArrest, risk, fear, etc
 set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updated here
 ;--- update once a week
-; if weeklyFlag [
+  if weeklyFlag [
 
-  ;update_fear
-  ;set weeklyFlag false
-  ;]
+    update_fear
+    set weeklyFlag false
+  ]
 
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
@@ -146,7 +152,6 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
 
 end
 
-;""""""""""""""" Update Functions """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 to-report fearValue  ; This is to get the fear of a friend
   report fear
@@ -178,12 +183,13 @@ to decrease-anger
 end
 
 
+
 ;"""""""""""""""""" Reactive Intention-Functions """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 ; if asked to go to prison
 to gotoprison
   set fear (1 + 10 * f) * fear ; change this to a function in the update function section!
-  print (word "citizen " who " has fear: " fear)
+  if Debug [print (word "citizen " who " has fear: " fear)]
   ; set flag
   set inPrison? true
   set color red
@@ -266,6 +272,20 @@ to proactiveBehavior
   ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
   ; like for example walkdesire?, destinationxy, etc.
   ;
+
+  let demoUtil demonstration-utility
+  let resigUtil resignation-utility
+
+  if (demoUtil > resigUtil) [set proState "Demonstration"]
+
+  if (resigUtil > demoUtil) [set proState "Resignation"]
+
+
+ ; For testing
+  ;set proState item (random 3) StateList
+  ;if Debug [print (word who "deliberated proState = " proState)]
+
+
   ; condition old state is finished
   ifelse finishedState [
     set proState []
@@ -313,6 +333,11 @@ to proactiveBehavior
     ; add more states here, the order does not matter
     proState = "Resignation" [resignation]
   )
+
+  if vWalk >= thrWalk [if proState != "WalkingAround" [increase-frustration]]
+  if vMeet >= thrMeet [if proState != "MeetingFriends" [increase-frustration]]
+  if vRest >= thrRest [if proState != "Go_out" [increase-frustration]]
+  if vCinema >= thrCinema [if proState != "Go_out" [increase-frustration]]  ; TODO?
 
 
 end
@@ -408,14 +433,6 @@ end
 
 to update_fear  ; Call this when calibrating weekly fear
   set fear 0.5 * (glbFear + fear)
-end
-
-to update-A [nearby-police]  ; Keeping track of nearby police
-  set A count nearby-police
-end
-
-to update-C  ; Keeping track of nearby citizens
-  set C count (other citizens in-radius citizen-vision)
 end
 
 to decrease-frustration  ; decrease frustration TODO: implement when
