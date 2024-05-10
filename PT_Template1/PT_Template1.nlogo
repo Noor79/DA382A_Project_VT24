@@ -48,6 +48,7 @@ globals [
   max-jailterm
   numPrisoners ; Number of prisoners
 
+  min-distance
 
   ;----- Time variables
   ; we might instead want to make use of the time extension, see https://ccl.northwestern.edu/netlogo/docs/time.html
@@ -110,6 +111,7 @@ to setup
   set numFreeCitizens 0
   set numPrisoners 0
   set newarrest 0
+  set min-distance 5
 
   ; setup of the environment:
   setup-environment ;

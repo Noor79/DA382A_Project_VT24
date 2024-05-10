@@ -13,12 +13,16 @@
 
 
 cops-own [
-  ;pvision ; cop-vision is set by slider
+  pvision ; cop-vision is set by slider
   cop-speed
   order ; Received order that currently is being carried out. Enumeration = rule-of-law,
   ; arrest-troublemakers,looking-for-terrorists, suppress-riots
   last-hunted
   last-suspect
+  last-xcord
+  last-ycord
+  is-chief
+   
 ]
 
 
@@ -40,6 +44,8 @@ create-cops num-cops [
   
   
 end
+
+
 
 
 to cop_behavior
@@ -85,23 +91,55 @@ to cop_behavior
   
 end 
 
+to handle_incoming_queue
+   let msg item 0 incoming-queue
+   ifelse empty? msg [print "No messages"] [
+    if get-performative msg = "stop-demonstration" []
+    if get-performative msg = "retrive" []
+    if get-performative msg = "patrol" [handle-patrol-message]
+    set incoming-queue remove-item 0 incoming-queue
+    let number-of-messages length incoming-queue
+    let i 1
+    while [i < number-of-messages] [
+      let message item i incoming-queue
+      set incoming-queue lput message incoming-queue
+    ]
+      set i i + 1
+   ]
+end
 
-to handle-patrol-message 
+
+to handle-patrol-message
+  let near-citizens count other citizens in-radius pvision
+  let distance-moved sqrt((xcor - last-xcord) ^ 2 + (ycor - last-ycord) ^ 2)
+
+  if near-citizens > 5 [
+    let message-type "report"
+    let content (list "coordinates" xcor ycor "cluster" near-citizens)
+    
+    let receiver one-of cops with [is-chief] 
+    
+     send-chief-message  message-type content receiver
+     set last-xcord xcor  
+     set last-ycord ycor
+    
+    ]
+
+  patrolAround  
+end
+
+
+to send-chief-message [message-type content receiver]
   
-  let patrol-areas (list "Townsquare" "empty")
+  let message create-message message-type
+  set message add-content content message
+  set message add-receiver receiver message
   
-  let target-area one-of patrol-areas
-  
-  
-  ifelse region != target-area[
-    move-to one-of patches with [region = target-area]
- 
-  ][
-  
-    patrolAround
-  ]
+  send message
+  print (word "received content: " content)
   
 end
+
 
   
 
