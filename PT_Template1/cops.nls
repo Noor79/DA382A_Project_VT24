@@ -82,6 +82,8 @@ to cop_behavior
    
   (ifelse 
     order = "rule-of-law" [rule-of-law suspect hunted]
+    order = "stop-demonstration" [stop-demonstration suspect]
+    order = "retreat" [retreat]
     order = "arrest-troublemakers" [
       (ifelse 
         suspect != nobody [arrest suspect]    
@@ -134,7 +136,7 @@ to handle_incoming_queue
    let msg item 0 incoming-queue  
    ifelse is-empty? msg [print "No messages"] [
     if get-performative msg = "stop-demonstration" [handle-demonstration get-content msg]
-    if get-performative msg = "retrive" []
+    if get-performative msg = "retreat" [set order "retreat"]
     if get-performative msg = "patrol" []
     set incoming-queue remove-item 0 incoming-queue
    
@@ -149,15 +151,23 @@ to handle_incoming_queue
 end 
 
 to handle-demonstration [coo]
-  face coordinate 
-  forward cop-speed
-  if [region] of patch-here = "TownSquare" [
-    if any? citizens-here [
-      arrest citizens-here    
-    ]
-  ]
+  set coordinate coo
+  set order "stop-demonstration"
 end 
 
+to stop-demonstration [suspect]
+  face coordinate
+  forward cop-speed
+  if [region] of patch-here = "TownSquare"[
+  if suspect != nobody [arrest suspect] 
+  ]
+end
+
+to retreat 
+  face locPolStation
+  forward cop-speed
+end
+  
 to-report is-empty? [value]
   report value = false
 end
