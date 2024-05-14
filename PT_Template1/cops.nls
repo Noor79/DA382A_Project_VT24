@@ -62,19 +62,22 @@ to cop_behavior
   if copSource = "rule-of-law" [
     set order "rule-of-law"
     if [region] of patch-here = "TownSquare" [
-    let nbr-of-citizens count citizens in-radius 5
+    let nbr-of-citizens count citizens in-radius 3
   let xcor-here pxcor
   let ycor-here pycor
+
   update-town-square-matrix xcor-here ycor-here nbr-of-citizens
+      
     ]
   ] 
   if copSource = "arrest-troublemakers"
 [
   set order "arrest-troublemakers"
-    let nbr-of-citizens count citizens in-radius 5
+    let nbr-of-citizens count citizens in-radius 3
   let xcor-here pxcor
   let ycor-here pycor
   update-town-square-matrix xcor-here ycor-here nbr-of-citizens
+      
   ]
   ;set order "rule-of-law"
   ;set order "arrest-troublemakers"
@@ -90,6 +93,7 @@ to cop_behavior
   (ifelse 
     order = "rule-of-law" [rule-of-law suspect hunted]
     order = "arrest-troublemakers" [
+     
       (ifelse 
         suspect != nobody [arrest suspect]    
         hunted != nobody [catch hunted]
@@ -171,16 +175,21 @@ to update-town-square-matrix [x y nbr-of-citizens]
 
   let current-citizens matrix:get town-square-matrix matrix-x matrix-y
   
-  if current-citizens = 0 [
-
+  if current-citizens = 0 and nbr-of-citizens > 0 [
+     let increase-percentage 100
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
-    show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: 100%")
+    matrix:set percentage-matrix matrix-x matrix-y increase-percentage
+    show (word "Demonstrators spotted: " nbr-of-citizens ", Increase: " increase-percentage "%" )
     
         let max-location find-max-citizens-location
 print (word "Cell of max citizens location: " max-location)
     let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
   print (word "Coordinates of max citizens location on map: " map-coordinates)
+    print("Nbr of citizens Matrix")
     show  town-square-matrix
+    print ("Percentage Matrix")
+     show  percentage-matrix
+      
     ;För test av koordinater
   ;  ask cops [ 
   ;let [map-x map-y] map-coordinates
@@ -191,30 +200,48 @@ print (word "Cell of max citizens location: " max-location)
     let increase-percentage 100 * (nbr-of-citizens - current-citizens) / current-citizens
 
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
+    matrix:set percentage-matrix matrix-x matrix-y increase-percentage
     show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: " increase-percentage "%")
    
      let max-location find-max-citizens-location
 print (word "Cell of max citizens location: " max-location)
     let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
   print (word "Coordinates of max citizens location on map: " map-coordinates)
-     show  town-square-matrix
+     print("Nbr of citizens Matrix")
+    show  town-square-matrix
+    print("Percentage Matrix")
+     show percentage-matrix
   ]
   
-   let max-location find-max-citizens-location
-  print (word "Cell of max citizens location: " max-location)
+  let max-location find-max-citizens-location
+  print (word "Cell of max citizens location: " max-location)  
   let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
   print (word "Coordinates of max citizens location on map: " map-coordinates)
-
-   show  town-square-matrix
+    
+  let max-increase find-highest-increase-location
+  print (word "Cell of highest increase location: " max-increase) 
+  let map-coord-increase matrix-cell-to-map-coordinates item 0 max-increase item 1 max-increase
+  print (word "Coordinates of highest increase on map: " map-coord-increase)
+ 
+  let max-decrease find-highest-decrease-location
+ print (word "Cell of highest decrease location: " max-decrease) 
+  let map-coord-decrease matrix-cell-to-map-coordinates item 0 max-decrease item 1 max-decrease
+  ;show  town-square-matrix
   
+ 
+  let total-percentage sum-all-percentages
+ print (word "Total percentage: " total-percentage "%") 
+  let total-citizens sum-all-citizens
+   print (word "Total citizens: " total-citizens) 
 end
+
 ; Returns the index with the highest number in the matrix
 to-report find-max-citizens-location
   let max-citizens 0
   let max-x 0
   let max-y 0
   
-  ; Iterate through each cell in the matrix
+
   foreach (range 0 4) [
     ?x ->
     foreach (range 0 4) [
@@ -232,12 +259,12 @@ to-report find-max-citizens-location
     ]
   ]
   
-  print (word "Cell with the highest number of citizens: " (list max-x max-y))
+;  print (word "Cell with the highest number of citizens: " (list max-x max-y))
   
   ; Return the index with the most citizens
   report (list max-x max-y)
 end
-; Returns coordinates to the place on town square with the most citizens
+; Returns coordinates to the place on town square by recieving a cell as input
 to-report matrix-cell-to-map-coordinates [matrix-x matrix-y]
   let map-x 0
   let map-y 0
@@ -248,5 +275,121 @@ to-report matrix-cell-to-map-coordinates [matrix-x matrix-y]
   
   report (list map-x map-y)
   show list map-x map-y
+end
+; Cell with highest increase
+to-report find-highest-increase-location
+  let max-percentage 0
+  let max-x 0
+  let max-y 0
+  
+  ; Iterate through each cell in the matrix
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      let current-percentage matrix:get percentage-matrix ?x ?y
+      
+      ifelse current-percentage > max-percentage [
+        set max-percentage current-percentage
+        set max-x ?x
+        set max-y ?y
+      ] [
+        ; Do nothing 
+      ]
+    ]
+  ]
+  
+;  print (word "Cell with the highest increase: " (list max-x max-y))
+  
+  ; Return the index with the most citizens
+  report (list max-x max-y)
+end
+; Cell with highest decrease
+to-report find-highest-decrease-location
+  let max-percentage 0
+  let max-x 0
+  let max-y 0
+  
+
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      let current-percentage matrix:get percentage-matrix ?x ?y
+      
+      ifelse current-percentage < max-percentage [
+        set max-percentage current-percentage
+        set max-x ?x
+        set max-y ?y
+      ] [
+        ; Do nothing 
+      ]
+    ]
+  ]
+  
+ ; print (word "Cell with the highest decrease: " (list max-x max-y))
+  
+  ; Return the index with the most citizens
+  report (list max-x max-y)
+end
+
+; Return the sum of all percentages
+to-report sum-all-percentages
+  let sum-percentages 0
+  
+ 
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      let current-percentage matrix:get percentage-matrix ?x ?y
+      set sum-percentages sum-percentages + current-percentage
+    ]
+  ]
+  
+  
+  report sum-percentages
+end
+ ; Return the sum of all citizens
+to-report sum-all-citizens
+  let sum-citizens 0
+  
+  ; Iterate through each cell in the matrix
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      let current-citizens matrix:get town-square-matrix ?x ?y
+      set sum-citizens sum-citizens + current-citizens
+    ]
+  ]
+  
+ 
+  report sum-citizens 
+end
+
+
+
+to reset-matrices
+  ; Reset town-square-matrix
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      matrix:set town-square-matrix ?x ?y 0
+    ]
+  ]
+
+  ; Reset percentage-matrix
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      matrix:set percentage-matrix ?x ?y 0
+    ]
+  ]
+  print("Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset-Reset")
+  show  town-square-matrix
+  show  percentage-matrix
 end
 
