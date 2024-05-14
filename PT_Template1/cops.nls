@@ -23,6 +23,8 @@ cops-own [
   colleagues ; List of all the police chiefs
   choose-cops? ; Flag for assigning the 10-20% of the police core to patrol town square
   chosen-cops? ; The ones chosen to patrol Town square
+  extra-cops? ; The remaining cops that gets sent to the Town square
+  cluster-size ; The demonstrators reported from the cop agents
 ]
 
 
@@ -49,6 +51,8 @@ create-cops num-cops [
     set colleagues []
     set choose-cops? true
   ]
+  
+  set demonstrator-matrix n-values 10 [n-values 10 [0]]
   
   ; Choose one police chief
   ask one-of cops [
@@ -88,30 +92,91 @@ to cop_behavior
   ;set order "arrest-troublemakers"
   
   if police-chief? [
-
+    
     if choose-cops? [ 
       ; Select 10-20% of cops randomly
       let percent 0.1 + random-float 0.1
       let num-to-choose round (percent * count cops)
-      let selected-cops n-of num-to-choose cops
-    
-      ; Create message from the police chief
-      let msg create-message "request"
-      set msg add-sender who msg
-      set msg add-content "Patrol Town Square, report clusters of more than 5 civilians!" msg
+      let selected-cops-list sort n-of num-to-choose cops
       
-      ask selected-cops [
-        set msg add-receiver who msg  ; Add the chosen cops as receivers
-        set chosen-cops? true ; To identify the selected cops
-        set shape "car"
+      ; For each selected cop create and send a message
+      foreach selected-cops-list [this-cop ->
+        ask this-cop [
+          let msg create-message "patrol"
+          set msg add-content "Patrol Town Square" msg
+          set msg add-receiver who msg  
+          set chosen-cops? true  
+          send msg  
+        ]
       ]
-      send msg
-      
       ; Make sure this only happens once
       set choose-cops? false
       print (word who " the police-chief has chosen 10-20% of the police core and to send them a request-message ")
     ]
     
+    while [not empty? incoming-queue] [
+      let cop-report get-message 
+      if get-performative cop-report = "report" [
+        let data get-content cop-report
+        
+        if member? "coordinates" data and member? "cluster" data [
+          let report-xcor item (position "coordinates" data + 1) data
+          let report-ycor item (position "coordinates" data + 2) data
+          set cluster-size item (position "cluster" data + 1) data
+          
+          ; Update the matrix
+          let row (item report-ycor demonstrator-matrix)
+          set row replace-item report-xcor row cluster-size
+          set demonstrator-matrix replace-item report-ycor demonstrator-matrix row
+          
+          print (word "Report received from cop at coordinates: " report-xcor " " report-ycor " with " cluster-size " civilians spotted.")
+          
+          
+          if cluster-size > 5 [
+            let ratio 500  ; 1 cop for every 500 demonstrators based on "antalet poliser per 100.000 invånare i Sverige (200,1)."
+            let required-cops ceiling (cluster-size / ratio)  ; round up
+                                                              ; available cops
+            let available-cops count turtles with [breed = cops and not chosen-cops? and not extra-cops?]
+            ; Determine the number of extra cops not more than available-cops
+            let extra-cops min (list required-cops available-cops)
+            
+            ask n-of extra-cops cops with [not chosen-cops?] [
+              let target-patch patch report-xcor report-ycor
+              face target-patch
+              move-to target-patch
+              ; Order
+              set extra-cops? true
+            ]
+          ]
+        ]
+      ]
+    ]
+    
+    let matrix-empty? false
+    
+    ; Iterate over each row in the matrix
+    foreach demonstrator-matrix [row ->
+      ; Iterate over each element in the row
+      foreach row [value ->
+        if value > 0 [
+          set matrix-empty? true
+          ; Exit the inner loop early if a non-zero is found
+          stop
+        ]
+      ]
+      ; Check after inner loop if already found a non-zero
+      if matrix-empty? [ stop ]
+    ]
+    
+    ; Determine when to withdraw extra cops only
+    if cluster-size < 3 and matrix-empty? [
+      ask cops with [extra-cops?] [
+        patrolAround
+        set extra-cops? false 
+      ]
+      ; Reset matrix
+      set demonstrator-matrix n-values 10 [n-values 10 [0]]
+    ]
     
   ]
   

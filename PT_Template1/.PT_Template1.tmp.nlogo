@@ -43,6 +43,7 @@ globals [
   nArrests;-----------------Total number of currently arrested citizens
   Jmax;---------------------Maximum jail term that a citizen can be sentenced to
 
+  demonstrator-matrix
 
   ; Global variables for the Observer to monitor the dynamics and the result of the simulation
   max-jailterm
