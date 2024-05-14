@@ -185,3 +185,8 @@ to update-town-square-matrix [x y nbr-of-citizens]
     show  town-square-matrix
   ]
 end
+
+to reset-matrix
+ set town-square-matrix 0
+end
+
