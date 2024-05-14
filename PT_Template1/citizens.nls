@@ -3,6 +3,7 @@
 ; FILE HISTORY:
 
 ; 2024-01-29 Initial template, gks
+; 2024-05-14, Hossein
 ; 
 ;
 ;---------------------------------------------------
@@ -14,6 +15,7 @@ citizens-own [
   localxy;------------current local patch on which the agent is standing on
   destinationxy;------destination patch to go to
   ;destinationRegion;-destination region to go to
+  occupation ;--------"blue-collar", "white-collar", "student", "unemployed"
   walkdesire?;--------flag to indicate wanting to move around
   pArrest;------------Arrest probability.
   C ;-----------------Number of citizen agents within cvision (includes oneself)
@@ -22,6 +24,8 @@ citizens-own [
   fear ;--------------Personal fear variable
   
   anger ;-------------Value for the citizen’s anger or aggression
+  anger_h;------------Homogenous part of the anger, determined by frustration and legitimacy
+  anger_d;------------Dynamic part of the anger, updated by events
   thrAnger ;----------Threshold for the anger value being ’high’
   percAnger ;---------Percentage of change of anger, between 5-30 %
   
@@ -33,11 +37,13 @@ citizens-own [
   vFrust ;------------Value for the citizen’s frustration
   thrFrust ;----------Threshold for the frustration value
   alfaFrust ;---------Constant value that decreases 100% to about 91% within one week (=update time interval)
+  minFrust;-----------Value to which vFrust is set after a political-action
   
   jailterm ;----------time of jailterm
   jailsentence ;------How much time the citizen has been sentenced to spend in prison
   inPrison?;----------Whether or not the citizen is in prison
   friendList;---------List of other citizen agents that are considered as friends
+  friend;-------------An agent from the friendList
   proState ;----------State variable for the proactive states. Enumeration = Study, 
                       ;Work, Unemployed, ’Walking around’, ’Meeting friends’, ’Go out’, Political, Resignation, Demonstration
                       ;Pursue of Happiness Goals
@@ -65,9 +71,18 @@ citizens-own [
   finalCondition; ----flag to indicate if the final condition is met
   safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
   agTimer1;---------- local timer for agents
+  TimerX
+  agAlarm1;
+  deliberationFlag;---flag to restrict one deliberation per evening/weekend
+  cinemaDuration;-----Logotime for the end of the cinema goal
+  restDuration;-------Logotime for the end of the restaurant goal
+  walkDuration;-------Logotime for the end of the walking goal
+  meetDuration;
+  speechDuration;-----Logotime for the speech
+  onceOnWeekend;------Flag to set for once per weekend
+  want2beHome;--------Flag to indicate preference to stay at home
   
 ]
-
 
 
 to setup-citizens
@@ -82,22 +97,124 @@ to setup-citizens
     ; save the home location
     set homeLoc patch-here
     setxy [pxcor] of homeLoc [pycor] of homeLoc 
+    set occupation item (random 4) (list "blue-collar" "white-collar" "student" "unemployed")
     set friendList []
+    set friend []
     set beliefs []
     set intentions []
     set incoming-queue []
     set destinationxy []
     set walkdesire? false
     set counter 0 ; all-purpose counter
+    set k 3.03  ; constant for finetuned arrest probability
     set f 0.05
     set fear 0.1
     set risk random-float 1.0
     set finishedState false
     set initialCondition false
     set finalCondition false
+    set agAlarm1 0
+    ; variables for walk
+    set minWalk ((random 2) + 1) / 10
+    set vWalk minWalk
+    set thrWalk ((random 5) + 5) / 10
+    ;set dWalk ((random 5)  + 1) / 100
+    ; variables for meeting friends
+    set minMeet ((random 2)  + 1) / 10
+    set vMeet minMeet
+    set thrMeet ((random 5) + 5) / 10
+    ; variables for going out (restaurant)
+    set minRest ((random 2)  + 1) / 10
+    set vRest minRest
+    set thrRest ((random 5) + 5) / 10
+    ; variables for cinema
+    set minCinema ((random 2)  + 1) / 10
+    set vCinema minCinema
+    set thrCinema ((random 5) + 5) / 10
+    set vFrust 0
+    set thrFrust ((random 4) + 6) / 10
+    ;set alfaFrust -2.3
+    set alfaFrust -1.0
+    set minFrust ((random 2)  + 1) / 10
+    set proState []
+    set deliberationFlag true
+    ; update anger
+    set anger 0
+    set anger_h 0.1
+    set anger_d 0.1
+    set thrAnger ((random 2) + 7) / 10
+    ;update-anger
+    set percAnger ((random 2) + 1) / 10
+    set cinemaDuration []
+    set restDuration []
+    set walkDuration []
+    set meetDuration []
+    set speechDuration []
+    set onceOnWeekend true
+    set want2beHome true
+    
+  ]
+  ;once the citizens are created, they can add friends
+  ask citizens [
+    add-friends ; add some other citizens as friends into the friendList
   ]
 
 end
+
+
+;"""""""""""""""""" Setup-Functions """"""""""""""""""""""""""""""""""""""""""""""""""""""""
+to add-friends
+  let num-friends random 4
+  ;let potential-friends n-of num-friends other citizens
+  repeat num-friends
+  [
+   let potential-friend one-of other citizens 
+   if potential-friend != nobody 
+    ;if any? potential-friends; not empty list, at least one friend
+    [
+      ;set friendList potential-friends
+      set friendList lput potential-friend friendList
+      ;set friendList lput potential-friend friendList
+      ask potential-friend
+      [
+        set friendList lput myself friendList
+      ]
+    ]
+  ]
+  end
+
+to meet_friends
+;; Ensure the friendList is not empty
+  if not empty? friendList [
+      ;; Create the message
+      let msg create-message "Can we meet? If yes, home at my place or at yours?"
+      ;; Add the sender and receiver to the message
+      set msg add-sender who msg
+      set msg add-receiver friend msg
+      ;; Send the message
+      send msg
+  ]
+end
+
+to reply-meeting
+  while [not empty? incoming-queue] [
+    let msg get-message
+    ;; Check the performative of the message
+    if get-performative msg = "reply-meeting" [
+      ;; Get the content of the message
+      let content get-content msg
+      if content = "No" [
+        ;no
+      ]ifelse content = "yes, at your place"[
+        set destinationxy homeLoc
+      ]
+      [
+        ;; Citizen goes to the friend's place
+      ]
+    ]
+  ]
+end
+
 
 
 to citizen_behavior
