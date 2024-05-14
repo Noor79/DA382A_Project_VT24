@@ -114,6 +114,7 @@ to setup
   set numPrisoners 0
   set newarrest 0
   set town-square-matrix matrix:make-constant 4 4 0
+  set percentage-matrix matrix:make-constant 4 4 0
   ; setup of the environment:
   setup-environment ;
   ; setup of all patches
@@ -198,7 +199,8 @@ to go
     if Source = "Only View" [vid:record-view] ; records the plane
     if Source = "With Interface" [vid:record-interface] ; records the interface
   ]
-
+;Reset matrices every 100 ticks
+every 100 [reset-matrices]
 end ; - to go part
 
 
