@@ -71,12 +71,10 @@ to cop_behavior
   if copSource = "arrest-troublemakers"
 [
   set order "arrest-troublemakers"
-    if [region] of patch-here = "TownSquare" [
     let nbr-of-citizens count citizens in-radius 5
   let xcor-here pxcor
   let ycor-here pycor
   update-town-square-matrix xcor-here ycor-here nbr-of-citizens
-    ]
   ]
   ;set order "rule-of-law"
   ;set order "arrest-troublemakers"
@@ -139,6 +137,8 @@ to catch [hunted]
   if any? pplaces [move-to one-of pplaces]
 end
 
+; map-coordinates = Koordinater till stället med mest citizens
+; max-location = Index med störst värde i matrix
 to update-town-square-matrix [x y nbr-of-citizens]
   let matrix-x 0
   let matrix-y 0
@@ -175,18 +175,78 @@ to update-town-square-matrix [x y nbr-of-citizens]
 
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
     show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: 100%")
+    
+        let max-location find-max-citizens-location
+print (word "Cell of max citizens location: " max-location)
+    let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
+  print (word "Coordinates of max citizens location on map: " map-coordinates)
     show  town-square-matrix
+    ;För test av koordinater
+  ;  ask cops [ 
+  ;let [map-x map-y] map-coordinates
+ ; move-to patch map-x map-y
+;]
   ]  
   if current-citizens != 0[
     let increase-percentage 100 * (nbr-of-citizens - current-citizens) / current-citizens
 
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
     show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: " increase-percentage "%")
-    show  town-square-matrix
+   
+     let max-location find-max-citizens-location
+print (word "Cell of max citizens location: " max-location)
+    let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
+  print (word "Coordinates of max citizens location on map: " map-coordinates)
+     show  town-square-matrix
   ]
-end
+  
+   let max-location find-max-citizens-location
+  print (word "Cell of max citizens location: " max-location)
+  let map-coordinates matrix-cell-to-map-coordinates item 0 max-location item 1 max-location
+  print (word "Coordinates of max citizens location on map: " map-coordinates)
 
-to reset-matrix
- set town-square-matrix 0
+   show  town-square-matrix
+  
+end
+; Returns the index with the highest number in the matrix
+to-report find-max-citizens-location
+  let max-citizens 0
+  let max-x 0
+  let max-y 0
+  
+  ; Iterate through each cell in the matrix
+  foreach (range 0 4) [
+    ?x ->
+    foreach (range 0 4) [
+      ?y ->
+      let current-citizens matrix:get town-square-matrix ?x ?y
+      
+
+      ifelse current-citizens > max-citizens [
+        set max-citizens current-citizens
+        set max-x ?x
+        set max-y ?y
+      ] [
+        ; Do nothing 
+      ]
+    ]
+  ]
+  
+  print (word "Cell with the highest number of citizens: " (list max-x max-y))
+  
+  ; Return the index with the most citizens
+  report (list max-x max-y)
+end
+; Returns coordinates to the place on town square with the most citizens
+to-report matrix-cell-to-map-coordinates [matrix-x matrix-y]
+  let map-x 0
+  let map-y 0
+  ;print (word matrix-x "," matrix-y)
+
+  set map-x ([pxcor] of locTownSquare + ([pxcor] of locTownSquare / 4)) + (matrix-x * ([pxcor] of locTownSquare / 4))
+  set map-y ([pycor] of locTownSquare + ([pycor] of locTownSquare / 4)) + (matrix-y * ([pycor] of locTownSquare / 4))
+  
+  report (list map-x map-y)
+  show list map-x map-y
 end
 
