@@ -40,6 +40,7 @@ create-cops num-cops [
     set incoming-queue []
     set last-hunted nobody
     set last-suspect nobody
+    set min-distance 10
   ]
   
   
@@ -113,7 +114,7 @@ to handle-patrol-message
   let near-citizens count other citizens in-radius pvision
   let distance-moved sqrt((xcor - last-xcord) ^ 2 + (ycor - last-ycord) ^ 2)
 
-  if near-citizens > 5 [
+  if near-citizens > 5 and distance-moved < min-distance [
     let message-type "report"
     let content (list "coordinates" xcor ycor "cluster" near-citizens)
     
