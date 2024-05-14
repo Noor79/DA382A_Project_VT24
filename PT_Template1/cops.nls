@@ -19,6 +19,7 @@ cops-own [
   ; arrest-troublemakers,looking-for-terrorists, suppress-riots
   last-hunted
   last-suspect
+  coordinate
 ]
 
 
@@ -41,6 +42,7 @@ create-cops num-cops [
     set incoming-queue []
     set last-hunted nobody
     set last-suspect nobody
+    set coordinate 00
   ]
   
   
@@ -146,8 +148,14 @@ to handle_incoming_queue
    ]
 end 
 
-to handle-demonstration [coordinate]
-  
+to handle-demonstration [coo]
+  face coordinate 
+  forward cop-speed
+  if [region] of patch-here = "TownSquare" [
+    if any? citizens-here [
+      arrest citizens-here    
+    ]
+  ]
 end 
 
 to-report is-empty? [value]
