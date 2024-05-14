@@ -113,7 +113,7 @@ to setup
   set numFreeCitizens 0
   set numPrisoners 0
   set newarrest 0
-  set town-square-matrix matrix:make-constant 3 3 0
+  set town-square-matrix matrix:make-constant 4 4 0
   ; setup of the environment:
   setup-environment ;
   ; setup of all patches
@@ -513,7 +513,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-0
+1
 
 MONITOR
 221
