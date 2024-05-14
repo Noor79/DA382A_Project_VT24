@@ -61,7 +61,7 @@ to cop_behavior
   ;set destinationxy one-of patches with [region = "Restaurant"]
   if copSource = "rule-of-law" [
     set order "rule-of-law"
-    if region = "TownSquare" [
+    if [region] of patch-here = "TownSquare" [
     let nbr-of-citizens count citizens in-radius 5
   let xcor-here pxcor
   let ycor-here pycor
@@ -71,7 +71,7 @@ to cop_behavior
   if copSource = "arrest-troublemakers"
 [
   set order "arrest-troublemakers"
- if region = "TownSquare" [
+    if [region] of patch-here = "TownSquare" [
     let nbr-of-citizens count citizens in-radius 5
   let xcor-here pxcor
   let ycor-here pycor
