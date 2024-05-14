@@ -61,6 +61,12 @@ to cop_behavior
   ;set destinationxy one-of patches with [region = "Restaurant"]
   if copSource = "rule-of-law" [
     set order "rule-of-law"
+     if region = "TownSquare"[
+    let nbr-of-citizens count citizens in-radius 5
+  let xcor-here pxcor
+  let ycor-here pycor
+  update-town-square-matrix xcor-here ycor-here nbr-of-citizens
+    ]
   ] 
   if copSource = "arrest-troublemakers"
 [
@@ -127,4 +133,44 @@ to catch [hunted]
   let pplaces neighborhood with [region = "empty" or region = "TownSquare"]
   if any? pplaces [move-to one-of pplaces]
 end
+
+
+to update-town-square-matrix [x y nbr-of-citizens]
+  let matrix-x 0
+  let matrix-y 0
+
+  if x < ([pxcor] of locTownSquare + ([pxcor] of locTownSquare / 3)) [
+    set matrix-x 0
+  ] 
+  ifelse x >= ([pxcor] of locTownSquare + ([pxcor] of locTownSquare / 3)) and (x < ([pxcor] of locTownSquare + ([pxcor] of locTownSquare * 2 / 3))) [
+    set matrix-x 1
+  ] [
+    set matrix-x 2
+  ]
+
+  if y < ([pycor] of locTownSquare + ([pycor] of locTownSquare / 3)) [
+    set matrix-y 0
+  ] 
+  ifelse y >= ([pycor] of locTownSquare + ([pycor] of locTownSquare / 3)) and (y < ([pycor] of locTownSquare + ([pycor] of locTownSquare * 2 / 3))) [
+    set matrix-y 1
+  ] [
+    set matrix-y 2
+  ]
+
+  let current-citizens matrix:get town-square-matrix matrix-x matrix-y
+  
+  if current-citizens = 0 [
+    matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
+    show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: 100%")
+    show  town-square-matrix
+  ]  
+  if current-citizens != 0[
+    ; calculate increase percentage
+    let increase-percentage 100 * (nbr-of-citizens - current-citizens) / current-citizens
+    matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
+    show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: " increase-percentage "%")
+    show  town-square-matrix
+  ]
+end
+
 
