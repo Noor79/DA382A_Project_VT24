@@ -61,13 +61,13 @@ to cop_behavior
   ;set destinationxy one-of patches with [region = "Restaurant"]
   if copSource = "rule-of-law" [
     set order "rule-of-law"
-     if region = "TownSquare"[
+ ;   if region = green [
     let nbr-of-citizens count citizens in-radius 5
   let xcor-here pxcor
   let ycor-here pycor
   update-town-square-matrix xcor-here ycor-here nbr-of-citizens
     ]
-  ] 
+;  ] 
   if copSource = "arrest-troublemakers"
 [
   set order "arrest-troublemakers"
@@ -160,13 +160,15 @@ to update-town-square-matrix [x y nbr-of-citizens]
   let current-citizens matrix:get town-square-matrix matrix-x matrix-y
   
   if current-citizens = 0 [
+    ; No demonstrators reported before, store the new value
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
     show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: 100%")
     show  town-square-matrix
   ]  
   if current-citizens != 0[
-    ; calculate increase percentage
+    ; Demonstrators reported before, calculate increase percentage
     let increase-percentage 100 * (nbr-of-citizens - current-citizens) / current-citizens
+    ; Store the new value
     matrix:set town-square-matrix matrix-x matrix-y nbr-of-citizens
     show (word "Demonstrators spotted: " nbr-of-citizens ", Increase percentage: " increase-percentage "%")
     show  town-square-matrix
