@@ -21,6 +21,8 @@ cops-own [
   last-suspect
   police-chief? ; Police chief or not
   colleagues ; List of all the police chiefs
+  choose-cops? ; Flag for assigning the 10-20% of the police core to patrol town square
+  chosen-cops? ; The ones chosen to patrol Town square
 ]
 
 
@@ -45,8 +47,19 @@ create-cops num-cops [
     set last-suspect nobody
     set police-chief? false
     set colleagues []
+    set choose-cops? true
   ]
   
+  ; Choose one police chief
+  ask one-of cops [
+    set police-chief? true
+    set shape "person police-chief"
+    
+  ]
+  ask cops [
+    ; Create a list of all the cop-agents (except itself)
+    set colleagues other cops with [self != myself]
+  ]
   
 end
 
@@ -75,18 +88,33 @@ to cop_behavior
   ;set order "arrest-troublemakers"
   
   if police-chief? [
-    ;antal poliser som ptrulerar
-    let patrolRate count cops with [order = "patrol"]
-    ;om antal är mindre än 20%, görs så länge villkor ej uppfyllt
-    if patrolRate < count cops / 5[
+
+    if choose-cops? [ 
+      ; Select 10-20% of cops randomly
+      let percent 0.1 + random-float 0.1
+      let num-to-choose round (percent * count cops)
+      let selected-cops n-of num-to-choose cops
+    
+      ; Create message from the police chief
+      let msg create-message "request"
+      set msg add-sender who msg
+      set msg add-content "Patrol Town Square, report clusters of more than 5 civilians!" msg
       
-     TODO: skicka order till en av poliser att patrulera
+      ask selected-cops [
+        set msg add-receiver who msg  ; Add the chosen cops as receivers
+        set chosen-cops? true ; To identify the selected cops
+        set shape "car"
+      ]
+      send msg
       
+      ; Make sure this only happens once
+      set choose-cops? false
+      print (word who " the police-chief has chosen 10-20% of the police core and to send them a request-message ")
     ]
+    
+    
   ]
   
-    
-
   ;################## REACTIVE BEHAVIOR ####################################
   ; subsumption hierarchy with highest priority in first if-sentence
   ; hiearchy of orders

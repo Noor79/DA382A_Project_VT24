@@ -120,17 +120,6 @@ to setup
 
   ; setup cops
   setup-cops
-  ; Choose one police chief
-  let choose-one one-of cops
-  ask choose-one [
-    set police-chief? true
-    set color red
-  ]
-  ask cops [
-    ; Create a list of all the cop-agents (except itself)
-    set colleagues other cops with [self != myself]
-  ]
-
 
 
   ; time section
@@ -796,6 +785,32 @@ Polygon -1184463 true false 175 6 194 6 189 21 180 21
 Line -1184463 false 149 24 197 24
 Rectangle -16777216 true false 101 177 122 187
 Rectangle -16777216 true false 179 164 183 186
+
+person police-chief
+false
+0
+Polygon -1 true false 124 91 150 165 178 91
+Polygon -13345367 true false 134 91 149 106 134 181 149 196 164 181 149 106 164 91
+Polygon -6459832 true false 180 195 120 195 90 285 105 300 135 300 150 225 165 300 195 300 210 285
+Polygon -6459832 true false 120 90 105 90 60 195 90 210 116 158 120 195 180 195 184 158 210 210 240 195 195 90 180 90 165 105 150 165 135 105 120 90
+Rectangle -7500403 true true 123 76 176 92
+Circle -7500403 true true 110 5 80
+Polygon -13345367 true false 150 26 110 41 97 29 137 -1 158 6 185 0 201 6 196 23 204 34 180 33
+Line -13345367 false 121 90 194 90
+Line -16777216 false 148 143 150 196
+Rectangle -16777216 true false 116 186 182 198
+Rectangle -16777216 true false 109 183 124 227
+Rectangle -16777216 true false 176 183 195 205
+Circle -1 true false 152 143 9
+Circle -1 true false 152 166 9
+Polygon -1184463 true false 172 112 191 112 185 133 179 133
+Polygon -1184463 true false 175 6 194 6 189 21 180 21
+Line -1184463 false 149 24 197 24
+Rectangle -16777216 true false 101 177 122 187
+Rectangle -16777216 true false 179 164 183 186
+Circle -1184463 true false 15 0 90
+Rectangle -1184463 true false 45 30 75 195
+Circle -2674135 true false 30 15 60
 
 plant
 false
