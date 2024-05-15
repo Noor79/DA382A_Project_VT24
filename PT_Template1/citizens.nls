@@ -361,4 +361,60 @@ end
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 ;task 7
 
+to task7_citizen_behavior
+  if not empty? incoming-queue [
+    let msg get-message
+    if get-performative msg = "request" [
+      ifelse is-list? get-content msg [
+        handle-multiple-options msg
+      ] [
+        handle-single-option msg
+      ]
+    ]
+  ]
+end
+
+to handle-multiple-options [msg]
+  let options order-options (get-content msg)
+  let response create-reply (ifelse-value (any? options) ["agree"] ["cancel"]) msg
+  set response add-content options response
+  send response
+end
+
+to handle-single-option [msg]
+  let option get-content msg
+  let decision make-decision option
+  let response create-reply (ifelse-value (decision = "Accept") ["agree"] ["cancel"]) msg
+  set response add-content (get-content msg) response
+  send response
+end
+
+to-report order-options [options]
+
+  let indexed-options map [option -> (list option random-float 1)] options
+ 
+  report map first sort-by [ [item1 item2] -> (item 1 item1) < (item 1 item2) ] indexed-options
+end
+
+to-report make-decision [option]
+  if random 2 = 0 [
+    report "Accept"
+  ]
+  report "Decline"
+end
+
+to handle-response
+  if not empty? incoming-queue [
+    let msg get-message
+    if get-performative msg = "inform" [
+      let content get-content msg
+      if content = "Accept" [
+        print "The friend accepted the invitation."
+      ]
+      if content = "Decline" [
+        print "The friend declined the invitation."
+      ]
+    ]
+  ]
+end
 
