@@ -184,7 +184,7 @@ end
 ; if asked to go to prison  
 to gotoprison 
   set fear (1 + 10 * f) * fear ; change this to a function in the update function section!
-  print (word "citizen " who " has fear: " fear)
+  ;print (word "citizen " who " has fear: " fear)
   ; set flag
   set inPrison? true
   set color red
@@ -360,6 +360,77 @@ end
 
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 ;task 7
+to task7_citizen_behavior
+  if not empty? incoming-queue [
+    let msg get-message
+    if get-performative msg = "request" [
+      ifelse is-list? get-content msg [
+        handle-multiple-options msg
+      ] [
+        handle-single-option msg
+      ]
+    ]
+  ]
+end
+
+
+to handle-multiple-options [msg]
+  let options order-options (get-content msg)
+  let response create-reply "inform" msg
+  set response add-content options response
+  send response
+end
+
+to handle-single-option [msg]
+  let option get-content msg
+  let decision make-decision option
+  let response create-reply "inform" msg
+  set response add-content decision response
+  send response
+end
+
+
+to-report order-options [options]
+  ; Create a list of options paired with a random index
+  let indexed-options map [option -> (list option random-float 1)] options
+  
+  ; Sort based on the random index
+  report map first sort-by [ [item1 item2] -> (item 1 item1) < (item 1 item2) ] indexed-options
+end
+
+
+to-report position-of-element [element options]
+  ifelse member? element options
+  [ report position element options ]
+  [ report length options ]  ; If the item is not in the preferences list, rank it last
+end
+
+
+to-report make-decision [option]
+  ; Assume there's a preferred option, otherwise, randomly decide
+  if option = "Movie" [
+    report "Accept"
+  ]
+  if random 2 = 0 [
+    report "Accept"
+  ]
+  report "Decline"
+end
+
+to handle-response
+  if not empty? incoming-queue [
+    let msg get-message
+    if get-performative msg = "inform" [
+      let content get-content msg
+      if content = "Accept" [
+        print "The friend accepted the invitation."
+      ]
+      if content = "Decline" [
+        print "The friend declined the invitation."
+      ]
+    ]
+  ]
+end
 
 to task7_citizen_behavior
   if not empty? incoming-queue [
